@@ -139,7 +139,7 @@ def test_the_report_needs_no_network_to_render(sample_report):
     # The only URLs allowed are the XML namespace, which is an identifier rather
     # than something the browser fetches, and the link home in the footer.
     urls = set(re.findall(r'https?://[^"\s<)]+', sample_report))
-    assert urls <= {"http://www.w3.org/2000/svg", "https://github.com/pr1317/opslab2"}, urls
+    assert urls <= {"http://www.w3.org/2000/svg", "https://github.com/pr1317/opslab"}, urls
 
 
 def test_the_report_states_the_generating_coefficient_when_it_is_known(sample_report):

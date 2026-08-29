@@ -20,18 +20,18 @@ installs anywhere Python 3.9+ runs, including a locked-down corporate laptop.
 
 ## Try it
 
-**[Read the sample report →](https://pr1317.github.io/opslab2/)**  Every chart on
+**[Read the sample report →](https://pr1317.github.io/opslab/)**  Every chart on
 that page — the discovered process map, the control charts, the survival curve,
 the coefficient forest plot — was drawn by this package from the standard library
 alone, and it is rebuilt from `main` on every push.
 
-**[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/pr1317/opslab2/blob/main/notebooks/try_opslab.ipynb)**
+**[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/pr1317/opslab/blob/main/notebooks/try_opslab.ipynb)**
 Runs the whole thing in a browser, nothing to install. About a minute.
 
 **Locally**, in three lines:
 
 ```bash
-pip install git+https://github.com/pr1317/opslab2
+pip install git+https://github.com/pr1317/opslab
 opslab try            # writes out/try/report.html, then open it
 ```
 

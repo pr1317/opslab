@@ -29,8 +29,8 @@ dev = ["pytest>=7"]
 opslab = "opslab.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/pr1317/opslab2"
-Report = "https://pr1317.github.io/opslab2/"
+Homepage = "https://github.com/pr1317/opslab"
+Report = "https://pr1317.github.io/opslab/"
 
 [tool.setuptools.packages.find]
 where = ["src"]

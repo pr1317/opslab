@@ -899,8 +899,8 @@ def build_report(
         "library alone &mdash; no numpy, scipy, pandas or lifelines.</p>\n%s\n</header>\n"
         "%s\n%s\n"
         "<footer>opslab is open source under the MIT licence. "
-        'Source and documentation: <a href="https://github.com/pr1317/opslab2">'
-        "github.com/pr1317/opslab2</a>.</footer>\n"
+        'Source and documentation: <a href="https://github.com/pr1317/opslab">'
+        "github.com/pr1317/opslab</a>.</footer>\n"
         "</div>\n</body>\n</html>\n"
         % (_STYLE, _escape(__version__), generated, _escape(source_note), toc,
            header_tiles, "\n".join(sections))
