@@ -1,0 +1,132 @@
+{
+  "name": "PensionsOperations",
+  "model": {
+    "culture": "en-GB",
+    "tables": [
+      {
+        "name": "Cases",
+        "columns": [
+          { "name": "CaseID", "dataType": "int64", "summarizeBy": "sum", "isKey": true, "sourceColumn": "CaseID" },
+          { "name": "TeamID", "dataType": "int64", "summarizeBy": "count", "sourceColumn": "TeamID" },
+          { "name": "DateKey", "dataType": "int64", "summarizeBy": "none", "sourceColumn": "DateKey" },
+          { "name": "BenefitAmount", "dataType": "double", "summarizeBy": "sum", "sourceColumn": "BenefitAmount" },
+          { "name": "HandlingHours", "dataType": "double", "summarizeBy": "sum", "sourceColumn": "HandlingHours" },
+          { "name": "SLAHours", "dataType": "double", "summarizeBy": "none", "sourceColumn": "SLAHours" },
+          { "name": "Breached", "dataType": "int64", "summarizeBy": "sum", "sourceColumn": "Breached" },
+          {
+            "name": "TeamTotalHours",
+            "dataType": "double",
+            "summarizeBy": "sum",
+            "expression": "CALCULATE( SUM( Cases[HandlingHours] ), ALLEXCEPT( Cases, Cases[TeamID] ) )"
+          }
+        ],
+        "measures": [
+          {
+            "name": "Breach Rate",
+            "expression": "SUM( Cases[Breached] ) / COUNTROWS( Cases )",
+            "formatString": "0.0%"
+          },
+          {
+            "name": "Breach Rate (Legacy)",
+            "expression": "SUM( Cases[Breached] ) / COUNTROWS( Cases )"
+          },
+          {
+            "name": "Avg Handling Hours",
+            "expression": "AVERAGEX( Cases, Cases[HandlingHours] )",
+            "description": "Mean handling hours per case.",
+            "displayFolder": "Service",
+            "formatString": "0.0"
+          },
+          {
+            "name": "Slow Cases",
+            "expression": "CALCULATE( COUNTROWS( Cases ), FILTER( Cases, Cases[HandlingHours] > 40 ) )",
+            "displayFolder": "Service"
+          },
+          {
+            "name": "Total Benefit",
+            "expression": "SUMX( Cases, Cases[BenefitAmount] )",
+            "displayFolder": "Finance"
+          },
+          {
+            "name": "Safe Rate",
+            "expression": "IFERROR( SUM( Cases[Breached] ) / COUNTROWS( Cases ), 0 )"
+          },
+          {
+            "name": "Unqualified Total",
+            "expression": "SUM( [HandlingHours] )"
+          },
+          {
+            "name": "Qualified Measure Use",
+            "expression": "Cases[Breach Rate] * 100"
+          },
+          {
+            "name": "Rank Within Team",
+            "expression": "COUNTROWS( FILTER( Cases, Cases[HandlingHours] > EARLIER( Cases[HandlingHours] ) ) )"
+          },
+          {
+            "name": "Repeated Logic",
+            "expression": "IF( COUNTROWS( Cases ) > 0, COUNTROWS( Cases ) / COUNTROWS( Cases ), BLANK() )"
+          },
+          {
+            "name": "Cases YTD",
+            "expression": "TOTALYTD( COUNTROWS( Cases ), 'Date'[Date] )",
+            "displayFolder": "Time",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Cases LY",
+            "expression": "CALCULATE( COUNTROWS( Cases ), SAMEPERIODLASTYEAR( 'Date'[Date] ) )",
+            "displayFolder": "Time",
+            "formatString": "#,0"
+          }
+        ],
+        "partitions": [ { "name": "Cases", "mode": "import", "source": { "type": "m" } } ]
+      },
+      {
+        "name": "Date",
+        "columns": [
+          { "name": "DateKey", "dataType": "int64", "summarizeBy": "none", "isKey": true, "isHidden": true, "sourceColumn": "DateKey" },
+          { "name": "Date", "dataType": "dateTime", "summarizeBy": "none", "sourceColumn": "Date" },
+          { "name": "MonthName", "dataType": "string", "summarizeBy": "none", "sourceColumn": "MonthName" }
+        ],
+        "measures": [],
+        "partitions": [ { "name": "Date", "mode": "import", "source": { "type": "m" } } ]
+      },
+      {
+        "name": "Team",
+        "columns": [
+          { "name": "TeamID", "dataType": "int64", "summarizeBy": "none", "isKey": true, "isHidden": true, "sourceColumn": "TeamID" },
+          { "name": "TeamName", "dataType": "string", "summarizeBy": "none", "sourceColumn": "TeamName" }
+        ],
+        "measures": [],
+        "partitions": [ { "name": "Team", "mode": "import", "source": { "type": "m" } } ]
+      },
+      {
+        "name": "LocalDateTable_9f3c1e77",
+        "columns": [ { "name": "Date", "dataType": "dateTime", "summarizeBy": "none", "sourceColumn": "Date" } ],
+        "measures": [],
+        "partitions": [ { "name": "p", "mode": "import", "source": { "type": "calculated" } } ]
+      }
+    ],
+    "relationships": [
+      {
+        "name": "Cases_Date",
+        "fromTable": "Cases", "fromColumn": "DateKey",
+        "toTable": "Date", "toColumn": "DateKey",
+        "crossFilteringBehavior": "oneDirection", "isActive": true
+      },
+      {
+        "name": "Cases_Team",
+        "fromTable": "Cases", "fromColumn": "TeamID",
+        "toTable": "Team", "toColumn": "TeamID",
+        "crossFilteringBehavior": "bothDirections", "isActive": true
+      },
+      {
+        "name": "Cases_Date_Closed",
+        "fromTable": "Cases", "fromColumn": "DateKey",
+        "toTable": "Date", "toColumn": "DateKey",
+        "crossFilteringBehavior": "oneDirection", "isActive": false
+      }
+    ]
+  }
+}

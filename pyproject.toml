@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "opslab"
+version = "0.1.0"
+description = "Operations analytics lab: process mining, statistical process control, SLA survival modelling, and Power BI/DAX linting for BFSI back-office operations."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "Preetam Roy", email = "roypreetam13@gmail.com" }]
+keywords = [
+  "process-mining", "statistical-process-control", "lean-six-sigma",
+  "survival-analysis", "sla", "power-bi", "dax", "operations-analytics",
+]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+  "Intended Audience :: Financial and Insurance Industry",
+  "Topic :: Scientific/Engineering :: Information Analysis",
+]
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=7"]
+
+[project.scripts]
+opslab = "opslab.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/pr1317/pr1317"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
