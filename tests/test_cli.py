@@ -4,11 +4,10 @@ import os
 
 import pytest
 
+from opslab import data
 from opslab.cli import main
 
-EXAMPLE = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "examples", "pensions_ops.bim"
-)
+EXAMPLE = data.model_path()
 
 
 @pytest.fixture(scope="module")

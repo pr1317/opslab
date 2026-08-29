@@ -29,10 +29,16 @@ dev = ["pytest>=7"]
 opslab = "opslab.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/pr1317/pr1317"
+Homepage = "https://github.com/pr1317/opslab2"
+Report = "https://pr1317.github.io/opslab2/"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+# The sample event log, case table and Power BI model are what `opslab try`
+# runs on, so they have to travel inside the wheel, not just sit in the repo.
+[tool.setuptools.package-data]
+"opslab.data" = ["*.csv", "*.bim"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

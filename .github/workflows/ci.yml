@@ -25,3 +25,5 @@ jobs:
         run: pytest -q
       - name: Run end-to-end demo
         run: opslab demo --out out/demo
+      - name: Build the sample report
+        run: opslab try --out out/try

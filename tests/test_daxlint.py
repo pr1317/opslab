@@ -6,13 +6,12 @@ import textwrap
 
 import pytest
 
+from opslab import data
 from opslab.daxlint import ALL_RULES, Severity, lint, load_model, tokenize
 from opslab.daxlint.lexer import TokenKind, column_references, function_calls
 from opslab.daxlint.model import Measure, Table, TabularModel, load_tmdl, load_tmsl
 
-EXAMPLE = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "examples", "pensions_ops.bim"
-)
+EXAMPLE = data.model_path()
 
 
 # -- lexer -----------------------------------------------------------------

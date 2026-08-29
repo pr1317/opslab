@@ -2,6 +2,24 @@
 
 Nothing in the toolkit depends on the simulator. Two CSVs drive everything.
 
+The quickest way to check your extract has the right shape is to compare it with
+the sample that ships in the package, which is a valid file of each kind:
+
+```python
+from opslab import data
+
+print(data.events_path())   # sample_events.csv
+print(data.cases_path())    # sample_cases.csv
+```
+
+`opslab try` copies both next to the report it writes, so `opslab try` followed by
+a look at `out/try/sample_cases.csv` shows you the target format directly. Once
+your own files match it, the same command runs the whole toolkit over them:
+
+```bash
+opslab try --events my_events.csv --cases my_cases.csv --out report
+```
+
 ## `events.csv` — what happened
 
 One row per completed activity.

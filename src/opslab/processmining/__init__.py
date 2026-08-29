@@ -29,7 +29,7 @@ from opslab.processmining.metrics import (
     handover_network,
     rework_statistics,
 )
-from opslab.processmining.render import to_dot, to_mermaid
+from opslab.processmining.render import to_dot, to_mermaid, to_svg
 
 __all__ = [
     "ActivityStats",
@@ -56,5 +56,6 @@ __all__ = [
     "rework_statistics",
     "to_dot",
     "to_mermaid",
+    "to_svg",
     "variants",
 ]

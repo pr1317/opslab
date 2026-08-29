@@ -131,6 +131,7 @@ def command_mine(args: argparse.Namespace) -> int:
         rework_statistics,
         to_dot,
         to_mermaid,
+        to_svg,
         variants,
     )
 
@@ -179,12 +180,14 @@ def command_mine(args: argparse.Namespace) -> int:
                            title="Discovered process"))
         _write_text(os.path.join(out, "process_map.mmd"),
                     to_mermaid(graph, min_edge_frequency=args.min_edge_frequency))
+        _write_text(os.path.join(out, "process_map.svg"),
+                    to_svg(graph, min_edge_frequency=args.min_edge_frequency))
         _write_rows(os.path.join(out, "variants.csv"),
                     [{"count": v.count, "length": v.length, "trace": " -> ".join(v.trace)}
                      for v in variant_list])
         _write_text(os.path.join(out, "conformance.txt"), report.to_text(examples=5))
-        print("\nWrote process_map.dot, process_map.mmd, variants.csv and "
-              "conformance.txt to %s" % out)
+        print("\nWrote process_map.svg (open it in a browser), process_map.dot, "
+              "process_map.mmd, variants.csv and conformance.txt to %s" % out)
     return 0
 
 
@@ -336,7 +339,9 @@ def command_daxlint(args: argparse.Namespace) -> int:
             print("%-8s %-8s %s" % (rule.code, rule.severity.value, rule.summary))
         return 0
 
-    model = load_model(args.model)
+    from opslab import data
+
+    model = load_model(data.model_path() if args.sample else args.model)
     findings = lint(model, select=args.select, ignore=args.ignore)
 
     if args.format == "json":
@@ -371,8 +376,79 @@ def command_daxlint(args: argparse.Namespace) -> int:
     return 1 if any(f.severity in threshold for f in findings) else 0
 
 
+def command_try(args: argparse.Namespace) -> int:
+    """Run every module and write one HTML report you can open in a browser.
+
+    This is the front door. It defaults to the sample shipped inside the package,
+    so it needs no arguments, no simulation step and no network; pointing it at
+    your own extract with ``--events``/``--cases`` produces the same report over
+    your data, minus the generating coefficients, which only exist for the sample.
+    """
+    import shutil
+    import webbrowser
+
+    from opslab import data
+    from opslab.report import write_report
+
+    bundled = not (args.events or args.cases or args.model)
+    events = args.events or data.events_path()
+    cases = args.cases or data.cases_path()
+    model = args.model or data.model_path()
+    out = _ensure_directory(args.out)
+
+    if bundled:
+        source_note = (
+            "The data is the sample shipped with the package: a synthetic "
+            "life-and-pensions back office, six months of it, with a backlog surge "
+            "deliberately injected part way through."
+        )
+        ground_truth = _ground_truth()
+    else:
+        source_note = "The data is your own extract."
+        ground_truth = None
+
+    print("Reading %s" % events)
+    print("        %s" % cases)
+    print("        %s" % model)
+
+    report_path = write_report(
+        os.path.join(out, "report.html"),
+        events_path=events,
+        cases_path=cases,
+        model_path=model,
+        ground_truth=ground_truth,
+        source_note=source_note,
+    )
+
+    if bundled:
+        for source in (events, cases):
+            shutil.copyfile(source, os.path.join(out, os.path.basename(source)))
+        print("\nCopied the sample CSVs alongside the report so you have something "
+              "to point the other subcommands at.")
+
+    print("\nWrote %s" % report_path)
+    print("Open it with:  file://%s" % os.path.abspath(report_path))
+    if args.open:
+        try:
+            webbrowser.open("file://" + os.path.abspath(report_path))
+        except Exception as error:  # pragma: no cover - depends on the desktop
+            print("Could not launch a browser (%s); open the path above." % error)
+    next_events = os.path.join(out, os.path.basename(events)) if bundled else events
+    print("\nThen run any single module on the same data, for example:")
+    print("  opslab mine --events %s" % next_events)
+    return 0
+
+
+def _ground_truth() -> Dict[str, float]:
+    """The coefficients the sample was generated from, for the report to check against."""
+    from opslab.simulate.generator import GROUND_TRUTH_BETA
+
+    return dict(GROUND_TRUTH_BETA)
+
+
 def command_demo(args: argparse.Namespace) -> int:
     """Run every module end to end against freshly generated data."""
+    from opslab import data
     from opslab.daxlint import lint, load_model
     from opslab.simulate import SimulationConfig, simulate
 
@@ -416,10 +492,7 @@ def command_demo(args: argparse.Namespace) -> int:
     print("\n" + "=" * 72)
     print("5. Power BI model lint")
     print("=" * 72)
-    sample = args.model or os.path.join(
-        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
-        "examples", "pensions_ops.bim",
-    )
+    sample = args.model or data.model_path()
     if os.path.exists(sample):
         model = load_model(sample)
         findings = lint(model)
@@ -448,6 +521,17 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--version", action="version", version="opslab %s" % __version__)
     subparsers = parser.add_subparsers(dest="command", required=True)
+
+    try_parser = subparsers.add_parser(
+        "try", help="run everything on the bundled sample and write an HTML report"
+    )
+    try_parser.add_argument("--out", default="out/try", help="output directory")
+    try_parser.add_argument("--events", default="", help="your own event log CSV")
+    try_parser.add_argument("--cases", default="", help="your own case table CSV")
+    try_parser.add_argument("--model", default="", help="your own .bim, .tmdl or PBIP folder")
+    try_parser.add_argument("--open", action="store_true",
+                            help="open the report in a browser when it is written")
+    try_parser.set_defaults(func=command_try)
 
     simulate_parser = subparsers.add_parser(
         "simulate", help="generate a synthetic event log and case table"
@@ -492,6 +576,8 @@ def build_parser() -> argparse.ArgumentParser:
         "daxlint", help="lint a Power BI tabular model (.bim, .tmdl or PBIP folder)"
     )
     lint_parser.add_argument("model", nargs="?", default="", help="model file or folder")
+    lint_parser.add_argument("--sample", action="store_true",
+                             help="lint the bundled example model instead of your own")
     lint_parser.add_argument("--format", choices=("text", "json"), default="text")
     lint_parser.add_argument("--select", action="append", help="only these rule codes")
     lint_parser.add_argument("--ignore", action="append", help="skip these rule codes")
@@ -517,8 +603,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     """Entry point for the ``opslab`` console script."""
     parser = build_parser()
     args = parser.parse_args(argv)
-    if args.command == "daxlint" and not args.model and not args.list_rules:
-        parser.error("daxlint requires a model path (or --list-rules)")
+    if args.command == "daxlint" and not (args.model or args.list_rules or args.sample):
+        parser.error("daxlint requires a model path (or --sample, or --list-rules)")
     try:
         return int(args.func(args) or 0)
     except (ValueError, OSError) as error:

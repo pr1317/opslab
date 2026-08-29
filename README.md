@@ -11,16 +11,50 @@ answer badly:
   are exactly the ones you cannot see yet?
 - **Is the Power BI model that reports all this** built on anything sound?
 
-Four modules answer those, and they share one synthetic dataset so the whole thing
-runs end to end in a single command.
-
-```bash
-pip install -e .
-opslab demo --out out/demo
-```
+Four modules answer those, over one sample dataset that ships inside the package.
 
 Everything is pure standard library — no numpy, scipy, pandas or lifelines. It
 installs anywhere Python 3.9+ runs, including a locked-down corporate laptop.
+
+---
+
+## Try it
+
+**[Read the sample report →](https://pr1317.github.io/opslab2/)**  Every chart on
+that page — the discovered process map, the control charts, the survival curve,
+the coefficient forest plot — was drawn by this package from the standard library
+alone, and it is rebuilt from `main` on every push.
+
+**[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/pr1317/opslab2/blob/main/notebooks/try_opslab.ipynb)**
+Runs the whole thing in a browser, nothing to install. About a minute.
+
+**Locally**, in three lines:
+
+```bash
+pip install git+https://github.com/pr1317/opslab2
+opslab try            # writes out/try/report.html, then open it
+```
+
+`opslab try` takes no arguments. It runs all four modules against the sample event
+log, case table and Power BI model that ship in the wheel — nothing is downloaded,
+nothing is simulated on the fly — and writes one self-contained HTML file with no
+external references, so it opens from a `file://` URL on a machine with no network.
+
+It also copies the sample CSVs next to the report, so the other subcommands have
+something to point at:
+
+```bash
+opslab mine  --events out/try/sample_events.csv --out out/try
+opslab spc   --cases  out/try/sample_cases.csv
+opslab sla   --cases  out/try/sample_cases.csv --numeric complexity --binary priority=Urgent
+opslab daxlint --sample --explain
+```
+
+Point it at your own extract with the same command:
+
+```bash
+opslab try --events my_events.csv --cases my_cases.csv --out report
+```
 
 ---
 
@@ -166,7 +200,7 @@ TMDL (`.tmdl` files, or a PBIP `definition/` folder — what a model under sourc
 control looks like now).
 
 ```bash
-opslab daxlint examples/pensions_ops.bim --explain
+opslab daxlint --sample --explain
 ```
 
 ```
@@ -244,18 +278,33 @@ attributes used as model covariates. `resolved` is `0` for a case still open, an
 ```python
 from opslab.calendar import BusinessCalendar
 from opslab.eventlog import EventLog
-from opslab.processmining import discover_dfg, to_mermaid
+from opslab.processmining import discover_dfg, to_svg
 
 log = EventLog.from_csv("events.csv")
 graph = discover_dfg(log, BusinessCalendar(start_hour=8, end_hour=18))
-print(to_mermaid(graph, min_edge_frequency=10))
+open("map.svg", "w").write(to_svg(graph, min_edge_frequency=10))
+```
+
+`to_dot` and `to_mermaid` render the same graph for Graphviz and for anything that
+renders Markdown; `to_svg` draws it directly, so a process map needs no other tool
+installed.
+
+The sample that `opslab try` uses is reachable from Python too, which is the
+quickest way to check your own loader against a known-good file:
+
+```python
+from opslab import data
+
+data.events_path()   # the sample event log
+data.cases_path()    # the sample case table, including cases still open
+data.model_path()    # a .bim written to fail every lint rule at least once
 ```
 
 ## Development
 
 ```bash
 pip install -e ".[dev]"
-pytest -q          # 193 tests, ~2 seconds
+pytest -q          # 215 tests, ~5 seconds
 opslab demo --out out/demo
 ```
 
@@ -264,7 +313,8 @@ normal and chi-square quantiles against published tables, control-chart constant
 against the standard factors, Kaplan-Meier against a hand-computed curve, and the
 Cox model's analytic gradient and Hessian against finite differences.
 
-CI runs the suite and the end-to-end demo on Python 3.9, 3.11 and 3.12.
+CI runs the suite, the end-to-end demo and the report build on Python 3.9,
+3.11 and 3.12. A second workflow publishes the report to GitHub Pages.
 
 ## Licence
 
