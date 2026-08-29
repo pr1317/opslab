@@ -1,9 +1,9 @@
 name: Publish the sample report
 
-# The report `opslab try` writes is the fastest way to see what the toolkit
-# does, so it is built from the current main and published rather than
-# committed - a generated artefact in the tree goes stale the first time a
-# chart changes.
+# The published site is the interactive demo in web/, the static report
+# `opslab try` writes, and the sample CSVs behind both. Everything generated is
+# rebuilt from the current main here rather than trusted from the tree, so the
+# published page cannot drift from the code that produced it.
 
 on:
   push:
@@ -29,10 +29,14 @@ jobs:
           python-version: "3.12"
       - name: Install
         run: pip install -e .
-      - name: Build the report
+      - name: Build the site
         run: |
-          opslab try --out site
-          mv site/report.html site/index.html
+          mkdir -p site
+          cp web/index.html web/app.js web/opslab.js site/
+          opslab export --out site/demo-data.js
+          opslab try --out out/try
+          cp out/try/report.html site/report.html
+          cp out/try/sample_events.csv out/try/sample_cases.csv site/
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site

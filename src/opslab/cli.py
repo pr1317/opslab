@@ -439,6 +439,24 @@ def command_try(args: argparse.Namespace) -> int:
     return 0
 
 
+def command_export(args: argparse.Namespace) -> int:
+    """Write every fitted result as JSON, for a front end to draw."""
+    from opslab import data
+    from opslab.exporter import write_payload
+
+    bundled = not (args.events or args.cases or args.model)
+    path = write_payload(
+        args.out,
+        as_javascript=args.out.endswith(".js"),
+        events_path=args.events or data.events_path(),
+        cases_path=args.cases or data.cases_path(),
+        model_path=args.model or data.model_path(),
+        ground_truth=_ground_truth() if bundled else None,
+    )
+    print("Wrote %s (%.0f KB)" % (path, os.path.getsize(path) / 1024.0))
+    return 0
+
+
 def _ground_truth() -> Dict[str, float]:
     """The coefficients the sample was generated from, for the report to check against."""
     from opslab.simulate.generator import GROUND_TRUTH_BETA
@@ -532,6 +550,16 @@ def build_parser() -> argparse.ArgumentParser:
     try_parser.add_argument("--open", action="store_true",
                             help="open the report in a browser when it is written")
     try_parser.set_defaults(func=command_try)
+
+    export_parser = subparsers.add_parser(
+        "export", help="write every fitted result as JSON (or .js) for a front end"
+    )
+    export_parser.add_argument("--out", default="out/opslab.json",
+                               help="output path; a .js suffix wraps it for a <script> tag")
+    export_parser.add_argument("--events", default="", help="your own event log CSV")
+    export_parser.add_argument("--cases", default="", help="your own case table CSV")
+    export_parser.add_argument("--model", default="", help="your own .bim, .tmdl or PBIP folder")
+    export_parser.set_defaults(func=command_export)
 
     simulate_parser = subparsers.add_parser(
         "simulate", help="generate a synthetic event log and case table"

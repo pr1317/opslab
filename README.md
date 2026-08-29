@@ -20,10 +20,17 @@ installs anywhere Python 3.9+ runs, including a locked-down corporate laptop.
 
 ## Try it
 
-**[Read the sample report →](https://pr1317.github.io/opslab/)**  Every chart on
-that page — the discovered process map, the control charts, the survival curve,
-the coefficient forest plot — was drawn by this package from the standard library
-alone, and it is rebuilt from `main` on every push.
+**[Open the live demo →](https://pr1317.github.io/opslab/)**  Move a slider and the
+Cox model is re-evaluated in the browser: set a case's complexity, backlog pressure
+and channel, pick an SLA target, and watch its survival curve and breach probability
+move. The map filter, the control charts and the DAX findings are live too. Nothing
+is fitted client side — the coefficients and the Breslow baseline hazard come from
+the Python, and a [parity test](tests/test_web_parity.py) holds the two
+implementations to 1e-9.
+
+**[Read the static report →](https://pr1317.github.io/opslab/report.html)**  The same
+analysis as a document, with no scripting at all. Every chart on it was drawn by this
+package from the standard library alone.
 
 **[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/pr1317/opslab/blob/main/notebooks/try_opslab.ipynb)**
 Runs the whole thing in a browser, nothing to install. About a minute.
@@ -54,6 +61,14 @@ Point it at your own extract with the same command:
 
 ```bash
 opslab try --events my_events.csv --cases my_cases.csv --out report
+```
+
+`opslab export` writes the same results as JSON — coefficients, the baseline hazard,
+the chart points with their limits, the map already laid out at a range of
+thresholds — for a front end to draw. The demo above is built on nothing else:
+
+```bash
+opslab export --out site/demo-data.js     # a .js suffix wraps it for a <script> tag
 ```
 
 ---
@@ -304,7 +319,7 @@ data.model_path()    # a .bim written to fail every lint rule at least once
 
 ```bash
 pip install -e ".[dev]"
-pytest -q          # 215 tests, ~5 seconds
+pytest -q          # 221 tests, ~6 seconds
 opslab demo --out out/demo
 ```
 
@@ -313,8 +328,10 @@ normal and chi-square quantiles against published tables, control-chart constant
 against the standard factors, Kaplan-Meier against a hand-computed curve, and the
 Cox model's analytic gradient and Hessian against finite differences.
 
-CI runs the suite, the end-to-end demo and the report build on Python 3.9,
-3.11 and 3.12. A second workflow publishes the report to GitHub Pages.
+CI runs the suite, the end-to-end demo and the report build on Python 3.9, 3.11 and
+3.12. The suite includes a parity test that scores the same cases through the Python
+model and through `web/opslab.js` in node, so the browser demo cannot drift from the
+library. A second workflow publishes the demo and the report to GitHub Pages.
 
 ## Licence
 
