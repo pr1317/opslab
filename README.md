@@ -1,4 +1,4 @@
-# opslab — operations analytics for BFSI back-office processes
+# Opslab — operations analytics for BFSI back-office processes
 
 A dependency-free Python toolkit for the questions that come up in life-and-pensions
 and financial-services operations, and that general-purpose data science libraries
